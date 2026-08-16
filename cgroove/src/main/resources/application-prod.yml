@@ -4,15 +4,16 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate  # 운영에서는 스키마 자동 변경 금지
+      # 운영에서는 스키마 자동 변경 금지. 최초 배포 시에만 update로 오버라이드
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     show-sql: false
     properties:
       hibernate:
         format_sql: false
 
   datasource:
-    url: jdbc:mysql://cgroove-db.c5yecoi0s1d1.ap-northeast-2.rds.amazonaws.com:3306/dance_community?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: admin
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
@@ -41,7 +42,7 @@ logging:
 
 file:
   upload:
-    base-dir: ${FILE_UPLOAD_BASE_DIR:/home/ec2-user/app/uploads}
+    base-dir: ${FILE_UPLOAD_BASE_DIR:/home/ubuntu/app/uploads}
     user-dir: users
     club-dir: clubs
     post-dir: posts

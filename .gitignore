@@ -3,3 +3,8 @@
 # 업로드된 파일 제외 (추가!)
 uploads/
 !uploads/.gitkeep
+# macOS
+.DS_Store
+
+# macOS
+.DS_Store

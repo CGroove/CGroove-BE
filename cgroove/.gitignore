@@ -65,3 +65,6 @@ yarn.lock
 
 ### Test Results ###
 test-results/
+
+### 개발 정리 문서 ###
+/docs
