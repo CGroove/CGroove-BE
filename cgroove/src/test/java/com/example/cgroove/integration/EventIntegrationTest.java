@@ -5,11 +5,14 @@ import com.example.cgroove.entity.User;
 import com.example.cgroove.repository.EventRepository;
 import com.example.cgroove.repository.UserRepository;
 import com.example.cgroove.security.UserDetail;
+import com.example.cgroove.dto.event.EventCreateRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +35,9 @@ class EventIntegrationTest {
 
         @Autowired
         private MockMvc mockMvc;
+
+        @Autowired
+        private ObjectMapper objectMapper;
         @Autowired
         private EventRepository eventRepository;
         @Autowired
@@ -61,17 +67,17 @@ class EventIntegrationTest {
                                 savedUser.getPassword());
 
                 // when
+                EventCreateRequest request = EventCreateRequest.builder()
+                                .scope("GLOBAL").type("WORKSHOP").title("Integration Event").content("Content")
+                                .locationName("Seoul").capacity(50L)
+                                .startsAt(LocalDateTime.now()).endsAt(LocalDateTime.now().plusHours(2))
+                                .build();
+                MockMultipartFile requestPart = new MockMultipartFile(
+                                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
                 mockMvc.perform(multipart("/events")
                                 .file(imageFile)
-                                .param("title", "Integration Event")
-                                .param("content", "Content")
-                                .param("scope", "GLOBAL")
-                                .param("type", "WORKSHOP")
-                                .param("locationName", "Seoul")
-                                .param("capacity", "50")
-                                .param("startsAt", LocalDateTime.now().toString())
-                                .param("endsAt", LocalDateTime.now().plusHours(2).toString())
-
+                                .file(requestPart)
                                 .with(user(userDetail))
                                 .with(csrf()))
                                 .andExpect(status().isCreated());

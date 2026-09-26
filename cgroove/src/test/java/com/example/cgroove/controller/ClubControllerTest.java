@@ -6,12 +6,12 @@ import com.example.cgroove.dto.club.ClubCreateRequest;
 import com.example.cgroove.dto.club.ClubResponse;
 import com.example.cgroove.dto.club.ClubUpdateRequest;
 import com.example.cgroove.enums.ClubType;
-import com.example.cgroove.enums.ImageType;
 import com.example.cgroove.security.JwtFilter;
 import com.example.cgroove.security.JwtUtil;
 import com.example.cgroove.security.WithCustomMockUser;
 import com.example.cgroove.service.ClubService;
 import com.example.cgroove.service.FileStorageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,6 +51,9 @@ class ClubControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private ClubService clubService;
 
@@ -78,17 +82,21 @@ class ClubControllerTest {
     @WithCustomMockUser
     void createClub_Success() throws Exception {
         MockMultipartFile image = new MockMultipartFile("clubImage", "test.jpg", "image/jpeg", "data".getBytes());
-        given(fileStorageService.saveImage(any(), eq(ImageType.CLUB))).willReturn("path/img.jpg");
-        given(clubService.createClub(any(), any(ClubCreateRequest.class))).willReturn(createMockResponse());
+        ClubCreateRequest request = ClubCreateRequest.builder()
+                .clubName("Club Name")
+                .intro("Intro")
+                .locationName("Seoul")
+                .description("Desc")
+                .clubType(ClubType.CLUB)
+                .tags(List.of("tag1", "tag2"))
+                .build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+        given(clubService.createClub(any(), any(ClubCreateRequest.class), any())).willReturn(createMockResponse());
 
         mockMvc.perform(multipart("/clubs")
                         .file(image)
-                        .param("clubName", "Club Name")
-                        .param("intro", "Intro")
-                        .param("locationName", "Seoul")
-                        .param("description", "Desc")
-                        .param("clubType", "CLUB")
-                        .param("tags", "tag1", "tag2")
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("클럽 생성 성공"));
@@ -110,15 +118,20 @@ class ClubControllerTest {
     @WithCustomMockUser
     void updateClub_Success() throws Exception {
         MockMultipartFile image = new MockMultipartFile("clubImage", "new.jpg", "image/jpeg", "data".getBytes());
-        given(clubService.updateClub(any(), eq(1L), any(ClubUpdateRequest.class))).willReturn(createMockResponse());
+        ClubUpdateRequest request = ClubUpdateRequest.builder()
+                .clubName("Updated Name")
+                .intro("Updated Intro")
+                .locationName("Busan")
+                .description("Updated Desc")
+                .clubType(ClubType.CLUB)
+                .build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+        given(clubService.updateClub(any(), eq(1L), any(ClubUpdateRequest.class), any())).willReturn(createMockResponse());
 
         mockMvc.perform(multipart(HttpMethod.PATCH, "/clubs/{clubId}", 1L)
                         .file(image)
-                        .param("clubName", "Updated Name")
-                        .param("intro", "Updated Intro")
-                        .param("locationName", "Busan")
-                        .param("description", "Updated Desc")
-                        .param("clubType", ClubType.CLUB.toString())
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("클럽 수정 성공"));

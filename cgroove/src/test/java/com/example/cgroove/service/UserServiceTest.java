@@ -117,7 +117,7 @@ class UserServiceTest {
 
         MultipartFile mockFile = mock(MultipartFile.class);
         given(mockFile.isEmpty()).willReturn(false);
-        UserUpdateRequest request = new UserUpdateRequest("NewNick", mockFile);
+        UserUpdateRequest request = new UserUpdateRequest("NewNick");
 
         given(userRepository.existsByNicknameAndUserIdNot("NewNick", userId)).willReturn(false);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -125,7 +125,7 @@ class UserServiceTest {
         given(fileStorageService.saveImage(any(), any())).willReturn("new.jpg");
 
         // when
-        UserResponse response = userService.updateUser(userId, request);
+        UserResponse response = userService.updateUser(userId, request, mockFile);
 
         // then
         verify(fileStorageService).deleteFile("old.jpg");
@@ -138,12 +138,12 @@ class UserServiceTest {
     void updateUser_Fail_DuplicateNickname() {
         // given
         Long userId = 1L;
-        UserUpdateRequest request = new UserUpdateRequest("DuplicateNick", null);
+        UserUpdateRequest request = new UserUpdateRequest("DuplicateNick");
 
         given(userRepository.existsByNicknameAndUserIdNot("DuplicateNick", userId)).willReturn(true);
 
         // when & then
-        assertThrows(ConflictException.class, () -> userService.updateUser(userId, request));
+        assertThrows(ConflictException.class, () -> userService.updateUser(userId, request, null));
     }
 
     @Test

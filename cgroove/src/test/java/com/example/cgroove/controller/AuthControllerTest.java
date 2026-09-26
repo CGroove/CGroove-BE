@@ -6,7 +6,6 @@ import com.example.cgroove.dto.auth.AuthResponse;
 import com.example.cgroove.dto.auth.LoginRequest;
 import com.example.cgroove.dto.auth.SignupRequest;
 import com.example.cgroove.dto.user.UserResponse;
-import com.example.cgroove.enums.ImageType;
 import com.example.cgroove.security.JwtFilter;
 import com.example.cgroove.security.JwtUtil;
 import com.example.cgroove.service.AuthService;
@@ -29,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -75,23 +73,19 @@ class AuthControllerTest {
     void signup_Success() throws Exception {
         // given
         MockMultipartFile image = new MockMultipartFile("profileImage", "test.jpg", "image/jpeg", "content".getBytes());
-        MockMultipartFile emailPart = new MockMultipartFile("email", "", "text/plain", "test@email.com".getBytes());
-        MockMultipartFile passwordPart = new MockMultipartFile("password", "", "text/plain", "password1234!!!".getBytes());
-        MockMultipartFile nicknamePart = new MockMultipartFile("nickname", "", "text/plain", "nick".getBytes());
-
-        given(fileStorageService.saveImage(any(), eq(ImageType.PROFILE))).willReturn("path/img.jpg");
+        SignupRequest request = new SignupRequest("test@email.com", "password1234!!!", "nick");
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
 
         UserResponse userResponse = new UserResponse(1L, "test@email.com", "nick", "path/img.jpg", null);
         AuthResponse authResponse = new AuthResponse(userResponse, "");
 
-        given(authService.signup(any(SignupRequest.class))).willReturn(authResponse);
+        given(authService.signup(any(SignupRequest.class), any())).willReturn(authResponse);
 
         // when & then
         mockMvc.perform(multipart("/auth/signup")
                         .file(image)
-                        .file(emailPart)
-                        .file(passwordPart)
-                        .file(nicknamePart)
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("회원가입 성공"));
@@ -102,18 +96,16 @@ class AuthControllerTest {
     @WithMockUser
     void signup_Fail_Conflict() throws Exception {
         // given
-        MockMultipartFile emailPart = new MockMultipartFile("email", "", "text/plain", "duplicate@test.com".getBytes());
-        MockMultipartFile passwordPart = new MockMultipartFile("password", "", "text/plain", "password1234".getBytes());
-        MockMultipartFile nicknamePart = new MockMultipartFile("nickname", "", "text/plain", "nick".getBytes());
+        SignupRequest request = new SignupRequest("duplicate@test.com", "password1234", "nick");
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
 
-        given(authService.signup(any(SignupRequest.class)))
+        given(authService.signup(any(SignupRequest.class), any()))
                 .willThrow(new com.example.cgroove.exception.ConflictException("이미 사용 중인 이메일입니다"));
 
         // when & then
         mockMvc.perform(multipart("/auth/signup")
-                        .file(emailPart)
-                        .file(passwordPart)
-                        .file(nicknamePart)
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail").value("이미 사용 중인 이메일입니다"));

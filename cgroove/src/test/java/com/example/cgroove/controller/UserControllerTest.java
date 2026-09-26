@@ -5,7 +5,6 @@ import com.example.cgroove.config.WebConfig;
 import com.example.cgroove.dto.user.PasswordUpdateRequest;
 import com.example.cgroove.dto.user.UserResponse;
 import com.example.cgroove.dto.user.UserUpdateRequest;
-import com.example.cgroove.enums.ImageType;
 import com.example.cgroove.security.JwtFilter;
 import com.example.cgroove.security.JwtUtil;
 import com.example.cgroove.security.WithCustomMockUser;
@@ -86,16 +85,17 @@ class UserControllerTest {
         // given
         MockMultipartFile image = new MockMultipartFile("profileImage", "test.jpg", "image/jpeg", "content".getBytes());
         String nickname = "NewNick";
-
-        given(fileStorageService.saveImage(any(), eq(ImageType.PROFILE))).willReturn("path/to/img.jpg");
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(new UserUpdateRequest(nickname)));
 
         UserResponse response = new UserResponse(1L, "email", nickname, "path/to/img.jpg", null);
-        given(userService.updateUser(eq(1L), any(UserUpdateRequest.class))).willReturn(response);
+        given(userService.updateUser(eq(1L), any(UserUpdateRequest.class), any())).willReturn(response);
 
         // when & then
         mockMvc.perform(multipart(HttpMethod.PATCH, "/users")
                         .file(image)
-                        .param("nickname", nickname)
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.nickname").value(nickname))

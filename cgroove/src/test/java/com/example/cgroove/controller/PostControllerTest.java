@@ -13,6 +13,7 @@ import com.example.cgroove.security.WithCustomMockUser;
 import com.example.cgroove.service.FileStorageService;
 import com.example.cgroove.service.PostLikeService;
 import com.example.cgroove.service.PostService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +34,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,6 +53,9 @@ class PostControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private PostService postService;
@@ -88,11 +94,14 @@ class PostControllerTest {
         given(postService.createPost(any(), any(PostCreateRequest.class))).willReturn(createMockResponse());
 
         // when & then
+        PostCreateRequest request = PostCreateRequest.builder()
+                .scope("GLOBAL").title("Title").content("Content").build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
         mockMvc.perform(multipart("/posts")
                         .file(image)
-                        .param("scope", "GLOBAL")
-                        .param("title", "Title")
-                        .param("content", "Content")
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("게시물 생성 성공"));
@@ -140,10 +149,14 @@ class PostControllerTest {
         given(postService.updatePost(eq(1L), any(), any(PostUpdateRequest.class))).willReturn(createMockResponse());
 
         // when & then
+        PostUpdateRequest request = PostUpdateRequest.builder()
+                .title("New Title").content("New Content").keepImages(List.of()).build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
         mockMvc.perform(multipart(HttpMethod.PATCH, "/posts/{postId}", 1L)
                         .file(image)
-                        .param("title", "New Title")
-                        .param("keepImages", "")
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("게시물 수정 성공"));
@@ -171,5 +184,22 @@ class PostControllerTest {
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.isLiked").value(true));
+    }
+
+    @Test
+    @DisplayName("게시글 생성 실패 - 잘못된 공개 범위는 400 (커스텀 제약 @ValidScopePost 동작 확인)")
+    @WithCustomMockUser
+    void createPost_Fail_InvalidScope() throws Exception {
+        PostCreateRequest request = PostCreateRequest.builder()
+                .scope("CLUB").title("Title").content("Content").build(); // CLUB인데 clubId 없음
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
+        mockMvc.perform(multipart("/posts")
+                        .file(requestPart)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        verify(postService, never()).createPost(any(), any());
     }
 }

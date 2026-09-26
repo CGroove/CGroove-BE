@@ -13,6 +13,7 @@ import com.example.cgroove.security.WithCustomMockUser;
 import com.example.cgroove.service.EventLikeService;
 import com.example.cgroove.service.EventService;
 import com.example.cgroove.service.FileStorageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,6 +52,9 @@ class EventControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private EventService eventService;
@@ -87,16 +92,17 @@ class EventControllerTest {
         given(fileStorageService.saveImage(any(), eq(ImageType.EVENT))).willReturn("path/img.jpg");
         given(eventService.createEvent(any(), any(EventCreateRequest.class))).willReturn(createMockResponse());
 
+        EventCreateRequest request = EventCreateRequest.builder()
+                .scope("GLOBAL").type("WORKSHOP").title("Title").content("Content")
+                .locationName("Seoul").capacity(50L)
+                .startsAt(LocalDateTime.now()).endsAt(LocalDateTime.now().plusHours(2))
+                .build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
         mockMvc.perform(multipart("/events")
                         .file(image)
-                        .param("scope", "GLOBAL")
-                        .param("type", "WORKSHOP")
-                        .param("title", "Title")
-                        .param("content", "Content")
-                        .param("locationName", "Seoul")
-                        .param("capacity", "50")
-                        .param("startsAt", LocalDateTime.now().toString())
-                        .param("endsAt", LocalDateTime.now().plusHours(2).toString())
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("행사 생성 성공"));
@@ -140,8 +146,15 @@ class EventControllerTest {
     void updateEvent_Success() throws Exception {
         given(eventService.updateEvent(eq(1L), any(), any(EventUpdateRequest.class))).willReturn(createMockResponse());
 
+        EventUpdateRequest request = EventUpdateRequest.builder()
+                .title("Updated Title").content("Content").capacity(50L)
+                .startsAt(LocalDateTime.now()).endsAt(LocalDateTime.now().plusHours(2))
+                .build();
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
         mockMvc.perform(multipart(HttpMethod.PATCH, "/events/{eventId}", 1L)
-                        .param("title", "Updated Title")
+                        .file(requestPart)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("행사 수정 성공"));

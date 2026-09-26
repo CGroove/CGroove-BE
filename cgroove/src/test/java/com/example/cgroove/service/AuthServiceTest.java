@@ -43,14 +43,14 @@ class AuthServiceTest {
     @DisplayName("회원가입 성공")
     void signup_Success() {
         // given
-        SignupRequest request = new SignupRequest("test@email.com", "pw", "nick", null);
+        SignupRequest request = new SignupRequest("test@email.com", "pw", "nick");
         UserResponse userResponse = new UserResponse(1L, "test@email.com", "nick", null, null);
 
         given(userService.createUser(request.getEmail(), request.getPassword(), request.getNickname(), null))
                 .willReturn(userResponse);
 
         // when
-        AuthResponse result = authService.signup(request);
+        AuthResponse result = authService.signup(request, null);
 
         // then
         assertThat(result.userResponse().email()).isEqualTo("test@email.com");

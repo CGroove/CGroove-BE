@@ -66,7 +66,6 @@ class ClubServiceTest {
                 .description("Desc")
                 .locationName("Seoul")
                 .clubType(ClubType.CREW)
-                .clubImage(null)
                 .tags(List.of("hiphop"))
                 .build();
 
@@ -81,7 +80,7 @@ class ClubServiceTest {
         given(clubRepository.save(any(Club.class))).willReturn(savedClub);
 
         // when
-        ClubResponse response = clubService.createClub(userId, request);
+        ClubResponse response = clubService.createClub(userId, request, null);
 
         // then
         ArgumentCaptor<Club> clubCaptor = ArgumentCaptor.forClass(Club.class);
@@ -114,7 +113,6 @@ class ClubServiceTest {
                 .description("Desc")
                 .locationName("Loc")
                 .clubType(ClubType.CLUB)
-                .clubImage(null)
                 .tags(List.of("tag"))
                 .build();
 
@@ -123,7 +121,7 @@ class ClubServiceTest {
         given(clubRepository.save(any(Club.class))).willReturn(club);
 
         // when
-        clubService.updateClub(userId, clubId, request);
+        clubService.updateClub(userId, clubId, request, null);
 
         // then
         verify(fileStorageService, never()).deleteFile(anyString());
@@ -144,7 +142,6 @@ class ClubServiceTest {
                 .description("Desc")
                 .locationName("Loc")
                 .clubType(ClubType.CLUB)
-                .clubImage(null)
                 .tags(null)
                 .build();
 
@@ -152,7 +149,7 @@ class ClubServiceTest {
 
         // when & then
         assertThrows(AuthException.class, () ->
-                clubService.updateClub(userId, clubId, request)
+                clubService.updateClub(userId, clubId, request, null)
         );
     }
 
