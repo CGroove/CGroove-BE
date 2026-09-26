@@ -16,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,7 +66,7 @@ class AuthServiceTest {
         LoginRequest request = new LoginRequest("test@email.com", "pw");
         User user = User.builder().userId(1L).email("test@email.com").nickname("nick").build();
 
-        given(userService.findByEmail(request.getEmail())).willReturn(user);
+        given(userService.findOptionalByEmail(request.getEmail())).willReturn(Optional.of(user));
         given(userService.matchesPassword(user, request.getPassword())).willReturn(true);
 
         given(jwtUtil.generateAccessToken(1L)).willReturn("access-token");
@@ -85,11 +87,25 @@ class AuthServiceTest {
         LoginRequest request = new LoginRequest("test@email.com", "wrong-pw");
         User user = User.builder().userId(1L).build();
 
-        given(userService.findByEmail(request.getEmail())).willReturn(user);
+        given(userService.findOptionalByEmail(request.getEmail())).willReturn(Optional.of(user));
         given(userService.matchesPassword(user, "wrong-pw")).willReturn(false);
 
         // when & then
-        assertThrows(AuthException.class, () -> authService.login(request, response));
+        AuthException ex = assertThrows(AuthException.class, () -> authService.login(request, response));
+        assertThat(ex.getMessage()).isEqualTo("이메일 또는 비밀번호가 일치하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 없는 이메일도 비밀번호 불일치와 같은 예외 · 메시지 (가입 여부 노출 방지)")
+    void login_Fail_UnknownEmail_SameResponseAsWrongPassword() {
+        // given
+        LoginRequest request = new LoginRequest("nobody@email.com", "pw");
+        given(userService.findOptionalByEmail(request.getEmail())).willReturn(Optional.empty());
+
+        // when & then
+        AuthException ex = assertThrows(AuthException.class, () -> authService.login(request, response));
+        assertThat(ex.getMessage()).isEqualTo("이메일 또는 비밀번호가 일치하지 않습니다");
+        verify(userService, never()).matchesPassword(any(), any());
     }
 
     @Test

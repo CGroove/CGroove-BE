@@ -8,7 +8,7 @@ import com.example.cgroove.entity.User;
 import com.example.cgroove.enums.ClubJoinStatus;
 import com.example.cgroove.enums.ClubRole;
 import com.example.cgroove.enums.ClubType;
-import com.example.cgroove.exception.AuthException;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.repository.ClubRepository;
 import com.example.cgroove.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -145,10 +145,10 @@ class ClubServiceTest {
                 .tags(null)
                 .build();
 
-        doThrow(new AuthException("권한 없음")).when(clubAuthService).validateClubAuthority(userId, clubId);
+        doThrow(new AccessDeniedException("권한 없음")).when(clubAuthService).validateClubAuthority(userId, clubId);
 
         // when & then
-        assertThrows(AuthException.class, () ->
+        assertThrows(AccessDeniedException.class, () ->
                 clubService.updateClub(userId, clubId, request, null)
         );
     }

@@ -8,6 +8,7 @@ import com.example.cgroove.entity.User;
 import com.example.cgroove.enums.EventJoinStatus;
 import com.example.cgroove.enums.EventType;
 import com.example.cgroove.enums.Scope;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.InvalidRequestException;
 import com.example.cgroove.repository.EventJoinRepository;
 import com.example.cgroove.repository.EventLikeRepository;
@@ -244,7 +245,7 @@ class EventServiceTest {
         );
 
         // when & then
-        assertThrows(InvalidRequestException.class, () ->
+        assertThrows(AccessDeniedException.class, () ->
                 eventService.updateEvent(userId, eventId, request)
         );
     }
@@ -284,7 +285,7 @@ class EventServiceTest {
         given(eventRepository.findById(eventId)).willReturn(Optional.of(event));
 
         // when & then
-        assertThrows(InvalidRequestException.class, () ->
+        assertThrows(AccessDeniedException.class, () ->
                 eventService.deleteEvent(userId, eventId)
         );
     }

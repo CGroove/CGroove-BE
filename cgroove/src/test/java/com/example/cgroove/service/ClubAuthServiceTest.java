@@ -4,7 +4,7 @@ import com.example.cgroove.entity.Club;
 import com.example.cgroove.entity.ClubJoin;
 import com.example.cgroove.enums.ClubJoinStatus;
 import com.example.cgroove.enums.ClubRole;
-import com.example.cgroove.exception.AuthException;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.NotFoundException;
 import com.example.cgroove.repository.ClubJoinRepository;
 import com.example.cgroove.repository.ClubRepository;
@@ -77,7 +77,7 @@ class ClubAuthServiceTest {
                 .willReturn(Optional.of(join));
 
         // when & then
-        assertThrows(AuthException.class, () -> clubAuthService.validateClubAuthority(userId, clubId));
+        assertThrows(AccessDeniedException.class, () -> clubAuthService.validateClubAuthority(userId, clubId));
     }
 
     @Test
@@ -107,7 +107,7 @@ class ClubAuthServiceTest {
                 .willReturn(Optional.of(join));
 
         // when & then
-        assertThrows(AuthException.class, () -> clubAuthService.validateLeaderAuthority(userId, clubId));
+        assertThrows(AccessDeniedException.class, () -> clubAuthService.validateLeaderAuthority(userId, clubId));
     }
 
     @Test
@@ -122,7 +122,7 @@ class ClubAuthServiceTest {
                 .willReturn(Optional.of(join));
 
         // when & then
-        assertThrows(AuthException.class, () -> clubAuthService.validateLeaderAuthority(userId, clubId));
+        assertThrows(AccessDeniedException.class, () -> clubAuthService.validateLeaderAuthority(userId, clubId));
     }
 
     @Test

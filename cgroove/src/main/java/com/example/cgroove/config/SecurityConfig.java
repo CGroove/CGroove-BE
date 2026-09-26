@@ -44,11 +44,10 @@ public class SecurityConfig {
                         .requestMatchers( // 인증 없이 접근 가능
                                 "/auth/login",
                                 "/auth/signup",
+                                "/auth/refresh", // Access Token 만료 상태에서 호출되므로 인증 없이 허용
+                                "/auth/logout",
                                 "/api/uploads/**",
                                 "/uploads/**",
-                                "/home/**",
-                                "/api/home/**",
-                                "/home/ec2-user/app/uploads/**",
                                 "/swagger-ui/**",
                                 "/actuator/**",
                                 "/v3/api-docs/**"

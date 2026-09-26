@@ -5,6 +5,7 @@ import com.example.cgroove.entity.Event;
 import com.example.cgroove.entity.EventJoin;
 import com.example.cgroove.entity.User;
 import com.example.cgroove.enums.EventJoinStatus;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.ConflictException;
 import com.example.cgroove.exception.InvalidRequestException;
 import com.example.cgroove.exception.NotFoundException;
@@ -234,7 +235,7 @@ class EventJoinServiceTest {
         given(eventRepository.findById(100L)).willReturn(Optional.of(event));
 
         // when & then
-        assertThrows(InvalidRequestException.class, () ->
+        assertThrows(AccessDeniedException.class, () ->
                 eventJoinService.rejectParticipation(otherUserId, 100L, 20L));
     }
 

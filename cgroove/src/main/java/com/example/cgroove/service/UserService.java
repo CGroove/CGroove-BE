@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.cgroove.enums.ImageType;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -123,9 +125,8 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("등록되지 않은 사용자"));
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("등록되지 않은 사용자"));
+    public Optional<User> findOptionalByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public boolean existsByEmail(String email) {

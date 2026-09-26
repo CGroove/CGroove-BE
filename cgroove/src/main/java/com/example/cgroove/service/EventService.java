@@ -9,6 +9,7 @@ import com.example.cgroove.entity.User;
 import com.example.cgroove.enums.EventJoinStatus;
 import com.example.cgroove.enums.EventType;
 import com.example.cgroove.enums.Scope;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.InvalidRequestException;
 import com.example.cgroove.exception.NotFoundException;
 import com.example.cgroove.repository.EventJoinRepository;
@@ -160,7 +161,7 @@ public class EventService {
     }
     private void checkHost(Long userId, Event event) {
         if (!event.getHost().getUserId().equals(userId)) {
-            throw new InvalidRequestException("권한이 없습니다");
+            throw new AccessDeniedException("권한이 없습니다");
         }
     }
 

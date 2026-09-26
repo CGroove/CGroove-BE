@@ -3,6 +3,7 @@ package com.example.cgroove.service;
 import com.example.cgroove.dto.eventJoin.EventJoinResponse;
 import com.example.cgroove.entity.*;
 import com.example.cgroove.enums.EventJoinStatus;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.ConflictException;
 import com.example.cgroove.exception.InvalidRequestException;
 import com.example.cgroove.exception.NotFoundException;
@@ -79,7 +80,7 @@ public class EventJoinService {
                 .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
 
         if (!event.getHost().getUserId().equals(hostId)) {
-            throw new InvalidRequestException("행사 주최자만 거절할 수 있습니다");
+            throw new AccessDeniedException("행사 주최자만 거절할 수 있습니다");
         }
 
         EventJoin targetJoin = eventJoinRepository.findByParticipant_UserIdAndEvent_EventId(participantId, eventId)

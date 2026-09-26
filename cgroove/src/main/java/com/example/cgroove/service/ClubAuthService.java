@@ -4,7 +4,7 @@ import com.example.cgroove.entity.Club;
 import com.example.cgroove.entity.ClubJoin;
 import com.example.cgroove.enums.ClubJoinStatus;
 import com.example.cgroove.enums.ClubRole;
-import com.example.cgroove.exception.AuthException;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.NotFoundException;
 import com.example.cgroove.repository.ClubJoinRepository;
 import com.example.cgroove.repository.ClubRepository;
@@ -25,7 +25,7 @@ public class ClubAuthService {
         ClubJoin clubJoin = findClubJoin(userId, clubId);
 
         if (!clubJoin.hasManagementPermission()) {
-            throw new AuthException("클럽 권한이 없습니다");
+            throw new AccessDeniedException("클럽 권한이 없습니다");
         }
     }
 
@@ -33,7 +33,7 @@ public class ClubAuthService {
         ClubJoin clubJoin = findClubJoin(userId, clubId);
 
         if (clubJoin == null || clubJoin.getRole() != ClubRole.LEADER) {
-            throw new AuthException("클럽 리더만 가능합니다");
+            throw new AccessDeniedException("클럽 리더만 가능합니다");
         }
     }
 

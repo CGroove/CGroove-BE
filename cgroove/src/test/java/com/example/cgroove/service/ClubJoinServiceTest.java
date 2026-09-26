@@ -6,6 +6,7 @@ import com.example.cgroove.entity.ClubJoin;
 import com.example.cgroove.entity.User;
 import com.example.cgroove.enums.ClubJoinStatus;
 import com.example.cgroove.enums.ClubRole;
+import com.example.cgroove.exception.AccessDeniedException;
 import com.example.cgroove.exception.ConflictException;
 import com.example.cgroove.exception.InvalidRequestException;
 import com.example.cgroove.repository.ClubJoinRepository;
@@ -463,11 +464,11 @@ class ClubJoinServiceTest {
         Long userId = 1L;
         Long clubId = 10L;
 
-        doThrow(new com.example.cgroove.exception.AuthException("권한 없음"))
+        doThrow(new AccessDeniedException("권한 없음"))
                 .when(clubAuthService).validateClubAuthority(userId, clubId);
 
         // when & then
-        assertThrows(com.example.cgroove.exception.AuthException.class, () ->
+        assertThrows(AccessDeniedException.class, () ->
                 clubJoinService.getPendingApplications(userId, clubId)
         );
     }
