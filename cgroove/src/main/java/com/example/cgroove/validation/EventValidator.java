@@ -10,6 +10,11 @@ public class EventValidator implements ConstraintValidator<ValidScopeTypeEvent, 
 
     @Override
     public boolean isValid(EventCreateRequest eventCreateRequest, ConstraintValidatorContext context) {
+        // 미입력은 @NotBlank가 검증
+        if (eventCreateRequest.getScope() == null || eventCreateRequest.getType() == null) {
+            return true;
+        }
+
         try {
             Scope.valueOf(eventCreateRequest.getScope().toUpperCase());
         } catch (IllegalArgumentException e) {

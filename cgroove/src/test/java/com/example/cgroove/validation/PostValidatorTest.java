@@ -77,4 +77,19 @@ class PostValidatorTest {
         // then
         assertThat(result).isFalse();
     }
+
+    @Test
+    @DisplayName("Scope 미입력은 통과 - 미입력 검증은 @NotBlank가 담당")
+    void isValid_NullScope_DelegatesToNotBlank() {
+        // given
+        PostCreateRequest request = new PostCreateRequest(
+                null, null, "T", "C", null, null
+        );
+
+        // when
+        boolean result = validator.isValid(request, context);
+
+        // then
+        assertThat(result).isTrue();
+    }
 }

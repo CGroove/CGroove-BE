@@ -100,4 +100,16 @@ class EventValidatorTest {
         // then
         assertThat(result).isFalse();
     }
+
+    @Test
+    @DisplayName("Scope · Type 미입력은 통과 - 미입력 검증은 @NotBlank가 담당")
+    void isValid_NullScopeOrType_DelegatesToNotBlank() {
+        // given
+        EventCreateRequest noScope = EventCreateRequest.builder().type("WORKSHOP").build();
+        EventCreateRequest noType = EventCreateRequest.builder().scope("GLOBAL").build();
+
+        // when & then
+        assertThat(validator.isValid(noScope, context)).isTrue();
+        assertThat(validator.isValid(noType, context)).isTrue();
+    }
 }
