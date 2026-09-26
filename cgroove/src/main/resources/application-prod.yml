@@ -24,6 +24,12 @@ spring:
 server:
   port: 8080
 
+# 1 OCPU / 1GB 환경이라 SQL 로깅 데코레이터(p6spy)를 끈다.
+# 로컬(application-local.yml)에서는 그대로 동작한다.
+decorator:
+  datasource:
+    enabled: false
+
 jwt:
   secret: ${JWT_SECRET}
 

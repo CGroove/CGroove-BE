@@ -6,7 +6,7 @@ set -euo pipefail
 # 환경변수로 오버라이드 가능:
 #   CGROOVE_SERVER_IP / CGROOVE_SERVER_USER / CGROOVE_SSH_KEY
 # ─────────────────────────────────────────────
-SERVER_IP="${CGROOVE_SERVER_IP:-152.67.210.66}"
+SERVER_IP="${CGROOVE_SERVER_IP:-168.107.54.33}"
 SERVER_USER="${CGROOVE_SERVER_USER:-ubuntu}"
 SSH_KEY="${CGROOVE_SSH_KEY:-$HOME/.ssh/cgroove-oci.key}"
 REMOTE_DIR="/home/${SERVER_USER}/app"
