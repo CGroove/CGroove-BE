@@ -132,7 +132,9 @@ class EventJoinServiceTest {
         Long userId = 1L;
         Long eventId = 100L;
         EventJoin existingJoin = EventJoin.builder().status(EventJoinStatus.CONFIRMED).build();
+        Event event = Event.builder().eventId(eventId).capacity(50L).build();
 
+        given(eventRepository.findWithLockByEventId(eventId)).willReturn(Optional.of(event));
         given(eventJoinRepository.findByParticipant_UserIdAndEvent_EventId(userId, eventId))
                 .willReturn(Optional.of(existingJoin));
 

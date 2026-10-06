@@ -13,6 +13,7 @@ import com.example.cgroove.repository.EventRepository;
 import com.example.cgroove.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,8 +26,13 @@ public class EventJoinService {
     private final EventRepository eventRepository;
     private final EventJoinRepository eventJoinRepository;
 
-    @Transactional
+    // 락을 먼저 잡고, 이후 조회는 커밋된 최신 값을 읽도록 READ_COMMITTED
+    // (MySQL 기본 REPEATABLE READ에서는 락 전 첫 조회 시점의 스냅샷으로 count해 정원을 넘김)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public EventJoinResponse applyEvent(Long userId, Long eventId) {
+        Event event = eventRepository.findWithLockByEventId(eventId)
+                .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
+
         EventJoin existingJoin = eventJoinRepository
                 .findByParticipant_UserIdAndEvent_EventId(userId, eventId)
                 .orElse(null);
@@ -36,9 +42,6 @@ public class EventJoinService {
                 throw new ConflictException("이미 신청이 완료된 행사입니다.");
             }
         }
-
-        Event event = eventRepository.findWithLockByEventId(eventId)
-                .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
 
         long currentCount = eventJoinRepository.countByEvent_EventIdAndStatus(eventId, EventJoinStatus.CONFIRMED);
         if (currentCount >= event.getCapacity()) {
